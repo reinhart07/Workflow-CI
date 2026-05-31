@@ -1,0 +1,15 @@
+artifact_uri: file:///home/runner/work/Workflow-CI/Workflow-CI/mlruns/0/90de88367009447e804a18a831b4fbed/artifacts
+end_time: 1780238483514
+entry_point_name: ''
+experiment_id: '0'
+lifecycle_stage: active
+run_id: 90de88367009447e804a18a831b4fbed
+run_name: wistful-robin-175
+run_uuid: 90de88367009447e804a18a831b4fbed
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1780238476565
+status: 3
+tags: []
+user_id: runner
