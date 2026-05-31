@@ -82,61 +82,57 @@ if __name__ == "__main__":
     X_train, X_test, y_train, y_test, feature_cols = load_data(args.train_path, args.test_path)
     labels = ['setosa', 'versicolor', 'virginica']
 
-    with mlflow.start_run():
-        # Log parameters
-        mlflow.log_param("n_estimators",      args.n_estimators)
-        mlflow.log_param("max_depth",         args.max_depth)
-        mlflow.log_param("min_samples_split", args.min_samples_split)
-        mlflow.log_param("min_samples_leaf",  args.min_samples_leaf)
+    # Log parameters
+    mlflow.log_param("n_estimators",      args.n_estimators)
+    mlflow.log_param("max_depth",         args.max_depth)
+    mlflow.log_param("min_samples_split", args.min_samples_split)
+    mlflow.log_param("min_samples_leaf",  args.min_samples_leaf)
 
-        # Train model
-        model = RandomForestClassifier(
-            n_estimators=args.n_estimators,
-            max_depth=args.max_depth,
-            min_samples_split=args.min_samples_split,
-            min_samples_leaf=args.min_samples_leaf,
-            random_state=42
-        )
-        model.fit(X_train, y_train)
-        y_pred  = model.predict(X_test)
-        y_proba = model.predict_proba(X_test)
+    # Train model
+    model = RandomForestClassifier(
+        n_estimators=args.n_estimators,
+        max_depth=args.max_depth,
+        min_samples_split=args.min_samples_split,
+        min_samples_leaf=args.min_samples_leaf,
+        random_state=42
+    )
+    model.fit(X_train, y_train)
+    y_pred  = model.predict(X_test)
+    y_proba = model.predict_proba(X_test)
 
-        # Metrics
-        accuracy  = accuracy_score(y_test, y_pred)
-        f1        = f1_score(y_test, y_pred, average='weighted')
-        precision = precision_score(y_test, y_pred, average='weighted')
-        recall    = recall_score(y_test, y_pred, average='weighted')
-        roc_auc   = roc_auc_score(y_test, y_proba, multi_class='ovr', average='weighted')
+    # Metrics
+    accuracy  = accuracy_score(y_test, y_pred)
+    f1        = f1_score(y_test, y_pred, average='weighted')
+    precision = precision_score(y_test, y_pred, average='weighted')
+    recall    = recall_score(y_test, y_pred, average='weighted')
+    roc_auc   = roc_auc_score(y_test, y_proba, multi_class='ovr', average='weighted')
 
-        mlflow.log_metric("accuracy",  accuracy)
-        mlflow.log_metric("f1_score",  f1)
-        mlflow.log_metric("precision", precision)
-        mlflow.log_metric("recall",    recall)
-        mlflow.log_metric("roc_auc",   roc_auc)
+    mlflow.log_metric("accuracy",  accuracy)
+    mlflow.log_metric("f1_score",  f1)
+    mlflow.log_metric("precision", precision)
+    mlflow.log_metric("recall",    recall)
+    mlflow.log_metric("roc_auc",   roc_auc)
 
-        print(f"Accuracy:  {accuracy:.4f}")
-        print(f"F1-Score:  {f1:.4f}")
-        print(f"Precision: {precision:.4f}")
-        print(f"Recall:    {recall:.4f}")
-        print(f"ROC-AUC:   {roc_auc:.4f}")
+    print(f"Accuracy:  {accuracy:.4f}")
+    print(f"F1-Score:  {f1:.4f}")
 
-        # Log model
-        mlflow.sklearn.log_model(model, artifact_path="model")
+    # Log model
+    mlflow.sklearn.log_model(model, artifact_path="model")
 
-        # Artefak tambahan
-        cm_path = save_confusion_matrix(y_test, y_pred, labels)
-        mlflow.log_artifact(cm_path, artifact_path="plots")
-        os.remove(cm_path)
+    # Artefak tambahan
+    cm_path = save_confusion_matrix(y_test, y_pred, labels)
+    mlflow.log_artifact(cm_path, artifact_path="plots")
+    os.remove(cm_path)
 
-        fi_path = save_feature_importance(model, feature_cols)
-        mlflow.log_artifact(fi_path, artifact_path="plots")
-        os.remove(fi_path)
+    fi_path = save_feature_importance(model, feature_cols)
+    mlflow.log_artifact(fi_path, artifact_path="plots")
+    os.remove(fi_path)
 
-        report = classification_report(y_test, y_pred, target_names=labels, output_dict=True)
-        report_path = "classification_report.json"
-        with open(report_path, 'w') as f:
-            json.dump(report, f, indent=4)
-        mlflow.log_artifact(report_path, artifact_path="reports")
-        os.remove(report_path)
+    report = classification_report(y_test, y_pred, target_names=labels, output_dict=True)
+    report_path = "classification_report.json"
+    with open(report_path, 'w') as f:
+        json.dump(report, f, indent=4)
+    mlflow.log_artifact(report_path, artifact_path="reports")
+    os.remove(report_path)
 
-        print("Training selesai. Artefak disimpan di MLflow.")
+    print("Training selesai. Artefak disimpan di MLflow.")
