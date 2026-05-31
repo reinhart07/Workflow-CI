@@ -1,0 +1,33 @@
+name: iris-classification
+
+conda_env: conda.yaml
+
+entry_points:
+  main:
+    parameters:
+      n_estimators:
+        type: int
+        default: 100
+      max_depth:
+        type: int
+        default: 5
+      min_samples_split:
+        type: int
+        default: 2
+      min_samples_leaf:
+        type: int
+        default: 1
+      train_path:
+        type: str
+        default: "iris_preprocessing/iris_train.csv"
+      test_path:
+        type: str
+        default: "iris_preprocessing/iris_test.csv"
+    command: >
+      python modelling.py
+        --n_estimators {n_estimators}
+        --max_depth {max_depth}
+        --min_samples_split {min_samples_split}
+        --min_samples_leaf {min_samples_leaf}
+        --train_path {train_path}
+        --test_path {test_path}

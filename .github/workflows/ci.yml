@@ -1,0 +1,66 @@
+name: CI - MLflow Training Pipeline
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  train-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.12.7'
+
+      - name: Install Dependencies
+        run: |
+          pip install mlflow==2.19.0 scikit-learn pandas numpy matplotlib seaborn
+
+      - name: Run MLflow Project
+        run: |
+          mlflow run MLProject/ \
+            -P n_estimators=100 \
+            -P max_depth=5 \
+            -P min_samples_split=2 \
+            -P min_samples_leaf=1 \
+            --env-manager=local
+
+      - name: Upload MLflow Artifacts to GitHub
+        uses: actions/upload-artifact@v3
+        with:
+          name: mlflow-artifacts
+          path: mlruns/
+
+      - name: Commit MLflow Runs to Repository
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git add mlruns/
+          git diff --cached --quiet || git commit -m "Auto: update mlflow artifacts [skip ci]"
+          git push
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build Docker Image with MLflow
+        run: |
+          mlflow models build-docker \
+            --model-uri "runs:/$(ls -t mlruns/0/ | head -1)/model" \
+            --name ${{ secrets.DOCKERHUB_USERNAME }}/iris-mlflow-model:latest \
+            --env-manager=local
+
+      - name: Push Docker Image to Docker Hub
+        run: |
+          docker push ${{ secrets.DOCKERHUB_USERNAME }}/iris-mlflow-model:latest
