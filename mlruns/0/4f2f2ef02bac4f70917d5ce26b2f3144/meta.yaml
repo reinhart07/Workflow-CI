@@ -1,0 +1,15 @@
+artifact_uri: file:///home/runner/work/Workflow-CI/Workflow-CI/mlruns/0/4f2f2ef02bac4f70917d5ce26b2f3144/artifacts
+end_time: 1780279314515
+entry_point_name: ''
+experiment_id: '0'
+lifecycle_stage: active
+run_id: 4f2f2ef02bac4f70917d5ce26b2f3144
+run_name: monumental-dog-263
+run_uuid: 4f2f2ef02bac4f70917d5ce26b2f3144
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1780279306522
+status: 3
+tags: []
+user_id: runner
