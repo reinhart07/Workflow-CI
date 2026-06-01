@@ -1,4 +1,4 @@
-name: iris-classification
+name: winequality-classification
 
 conda_env: conda.yaml
 

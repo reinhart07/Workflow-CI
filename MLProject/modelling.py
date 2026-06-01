@@ -13,39 +13,33 @@ from sklearn.metrics import (
     confusion_matrix, classification_report, roc_auc_score
 )
 
-# =============================================
-# ARGUMENT PARSER
-# =============================================
 parser = argparse.ArgumentParser()
-parser.add_argument("--n_estimators",      type=int,   default=100)
-parser.add_argument("--max_depth",         type=int,   default=5)
-parser.add_argument("--min_samples_split", type=int,   default=2)
-parser.add_argument("--min_samples_leaf",  type=int,   default=1)
-parser.add_argument("--train_path",        type=str,   default="iris_preprocessing/iris_train.csv")
-parser.add_argument("--test_path",         type=str,   default="iris_preprocessing/iris_test.csv")
+parser.add_argument("--n_estimators",      type=int, default=100)
+parser.add_argument("--max_depth",         type=int, default=5)
+parser.add_argument("--min_samples_split", type=int, default=2)
+parser.add_argument("--min_samples_leaf",  type=int, default=1)
+parser.add_argument("--train_path", type=str, default="winequality_preprocessing/winequality_train.csv")
+parser.add_argument("--test_path",  type=str, default="winequality_preprocessing/winequality_test.csv")
 args = parser.parse_args()
 
 
-# =============================================
-# LOAD DATA
-# =============================================
 def load_data(train_path, test_path):
     train_df = pd.read_csv(train_path)
     test_df  = pd.read_csv(test_path)
-    feature_cols = ['sepal length (cm)', 'sepal width (cm)',
-                    'petal length (cm)', 'petal width (cm)']
+    feature_cols = [col for col in train_df.columns if col != 'quality']
     X_train = train_df[feature_cols]
-    y_train = train_df['target']
+    y_train = train_df['quality']
     X_test  = test_df[feature_cols]
-    y_test  = test_df['target']
+    y_test  = test_df['quality']
     return X_train, X_test, y_train, y_test, feature_cols
 
 
-def save_confusion_matrix(y_test, y_pred, labels, path="confusion_matrix.png"):
+def save_confusion_matrix(y_test, y_pred, path="confusion_matrix.png"):
     cm = confusion_matrix(y_test, y_pred)
     plt.figure(figsize=(6, 5))
     sns.heatmap(cm, annot=True, fmt='d', cmap='Blues',
-                xticklabels=labels, yticklabels=labels)
+                xticklabels=['Buruk', 'Baik'],
+                yticklabels=['Buruk', 'Baik'])
     plt.title('Confusion Matrix')
     plt.xlabel('Predicted')
     plt.ylabel('Actual')
@@ -57,7 +51,7 @@ def save_confusion_matrix(y_test, y_pred, labels, path="confusion_matrix.png"):
 
 def save_feature_importance(model, feature_cols, path="feature_importance.png"):
     importances = model.feature_importances_
-    plt.figure(figsize=(7, 4))
+    plt.figure(figsize=(8, 5))
     sns.barplot(x=importances, y=feature_cols)
     plt.title('Feature Importance')
     plt.xlabel('Importance Score')
@@ -67,14 +61,9 @@ def save_feature_importance(model, feature_cols, path="feature_importance.png"):
     return path
 
 
-# =============================================
-# MAIN
-# =============================================
 if __name__ == "__main__":
     X_train, X_test, y_train, y_test, feature_cols = load_data(args.train_path, args.test_path)
-    labels = ['setosa', 'versicolor', 'virginica']
 
-    # Gunakan active run yang sudah dibuat oleh MLflow Project
     active_run = mlflow.active_run()
     if active_run is None:
         active_run = mlflow.start_run()
@@ -100,7 +89,7 @@ if __name__ == "__main__":
         f1        = f1_score(y_test, y_pred, average='weighted')
         precision = precision_score(y_test, y_pred, average='weighted')
         recall    = recall_score(y_test, y_pred, average='weighted')
-        roc_auc   = roc_auc_score(y_test, y_proba, multi_class='ovr', average='weighted')
+        roc_auc   = roc_auc_score(y_test, y_proba[:, 1])
 
         mlflow.log_metric("accuracy",  accuracy)
         mlflow.log_metric("f1_score",  f1)
@@ -116,7 +105,7 @@ if __name__ == "__main__":
 
         mlflow.sklearn.log_model(model, artifact_path="model")
 
-        cm_path = save_confusion_matrix(y_test, y_pred, labels)
+        cm_path = save_confusion_matrix(y_test, y_pred)
         mlflow.log_artifact(cm_path, artifact_path="plots")
         os.remove(cm_path)
 
@@ -124,7 +113,7 @@ if __name__ == "__main__":
         mlflow.log_artifact(fi_path, artifact_path="plots")
         os.remove(fi_path)
 
-        report = classification_report(y_test, y_pred, target_names=labels, output_dict=True)
+        report = classification_report(y_test, y_pred, target_names=['Buruk', 'Baik'], output_dict=True)
         report_path = "classification_report.json"
         with open(report_path, 'w') as f:
             json.dump(report, f, indent=4)
